@@ -1,0 +1,213 @@
+openapi: 3.1.0
+info:
+  title: Loan Submission API
+  version: 1.0.0
+  description: Submit a loan application with customer, spouse when applicable, and car collateral information.
+servers:
+  - url: http://localhost:8080
+paths:
+  /v1/loan-applications:
+    post:
+      operationId: submitLoanApplication
+      summary: Submit a loan application
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoanApplicationSubmission"
+      responses:
+        "201":
+          description: Application created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoanApplicationConfirmation"
+        "400":
+          description: Request body is malformed or has an unsupported shape.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "422":
+          description: One or more request fields failed validation.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ValidationProblem"
+        "500":
+          description: The application could not be persisted.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+components:
+  schemas:
+    LoanApplicationSubmission:
+      type: object
+      additionalProperties: false
+      required: [customer, collateral, loan]
+      properties:
+        customer:
+          $ref: "#/components/schemas/Customer"
+        spouse:
+          $ref: "#/components/schemas/Spouse"
+        collateral:
+          $ref: "#/components/schemas/CarCollateral"
+        loan:
+          $ref: "#/components/schemas/ProposedLoan"
+      allOf:
+        - if:
+            properties:
+              customer:
+                properties:
+                  maritalStatus:
+                    const: MARRIED
+            required: [customer]
+          then:
+            required: [spouse]
+          else:
+            not:
+              required: [spouse]
+      description: spouse is required when customer.maritalStatus is MARRIED and must be omitted otherwise.
+    Customer:
+      type: object
+      additionalProperties: false
+      required: [fullName, idNumber, address, birthDate, phoneNumber, email, monthlyIncome, maritalStatus]
+      properties:
+        fullName:
+          type: string
+          minLength: 1
+        idNumber:
+          type: string
+          minLength: 1
+        address:
+          $ref: "#/components/schemas/Address"
+        birthDate:
+          type: string
+          format: date
+          pattern: "^\\d{4}-\\d{2}-\\d{2}$"
+        phoneNumber:
+          type: string
+          minLength: 1
+        email:
+          type: string
+          format: email
+        monthlyIncome:
+          $ref: "#/components/schemas/NonNegativeAmount"
+        maritalStatus:
+          type: string
+          minLength: 1
+          enum: [MARRIED, UNMARRIED]
+    Address:
+      type: object
+      additionalProperties: false
+      required: [street, city, postalCode]
+      properties:
+        street:
+          type: string
+          minLength: 1
+        city:
+          type: string
+          minLength: 1
+        postalCode:
+          type: string
+          minLength: 1
+    Spouse:
+      type: object
+      additionalProperties: false
+      required: [fullName, idCardNumber, phoneNumber, monthlyIncome]
+      properties:
+        fullName:
+          type: string
+          minLength: 1
+        idCardNumber:
+          type: string
+          minLength: 1
+        phoneNumber:
+          type: string
+          minLength: 1
+        monthlyIncome:
+          $ref: "#/components/schemas/NonNegativeAmount"
+    CarCollateral:
+      type: object
+      additionalProperties: false
+      required: [brand, model, manufacturingYear, licensePlate]
+      properties:
+        brand:
+          type: string
+          minLength: 1
+        model:
+          type: string
+          minLength: 1
+        manufacturingYear:
+          type: integer
+          minimum: 1000
+          maximum: 9999
+          description: Must not be later than the current calendar year.
+        licensePlate:
+          type: string
+          minLength: 1
+    ProposedLoan:
+      type: object
+      additionalProperties: false
+      required: [amount, tenureMonths]
+      properties:
+        amount:
+          type: number
+          exclusiveMinimum: 0
+          multipleOf: 100
+          description: Amount in the application's configured currency.
+        tenureMonths:
+          type: integer
+          minimum: 3
+          maximum: 48
+    NonNegativeAmount:
+      type: number
+      minimum: 0
+      description: Monetary amount in the application's configured currency.
+    LoanApplicationConfirmation:
+      type: object
+      additionalProperties: false
+      required: [id, status]
+      properties:
+        id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          const: IN_PROGRESS
+    Problem:
+      type: object
+      properties:
+        type:
+          type: string
+          format: uri
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+        instance:
+          type: string
+          format: uri-reference
+      required: [type, title, status]
+    ValidationProblem:
+      allOf:
+        - $ref: "#/components/schemas/Problem"
+        - type: object
+          required: [errors]
+          properties:
+            errors:
+              type: array
+              items:
+                type: object
+                required: [field, code, message]
+                properties:
+                  field:
+                    type: string
+                  code:
+                    type: string
+                  message:
+                    type: string
