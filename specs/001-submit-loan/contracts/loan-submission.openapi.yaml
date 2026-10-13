@@ -46,13 +46,13 @@ components:
     LoanApplicationSubmission:
       type: object
       additionalProperties: false
-      required: [customer, collateral, loan]
+      required: [customer, car, loan]
       properties:
         customer:
           $ref: "#/components/schemas/Customer"
         spouse:
           $ref: "#/components/schemas/Spouse"
-        collateral:
+        car:
           $ref: "#/components/schemas/CarCollateral"
         loan:
           $ref: "#/components/schemas/ProposedLoan"
@@ -61,7 +61,7 @@ components:
             properties:
               customer:
                 properties:
-                  maritalStatus:
+                  marital_status:
                     const: MARRIED
             required: [customer]
           then:
@@ -69,40 +69,40 @@ components:
           else:
             not:
               required: [spouse]
-      description: spouse is required when customer.maritalStatus is MARRIED and must be omitted otherwise.
+      description: spouse is required when customer.marital_status is MARRIED and must be omitted otherwise.
     Customer:
       type: object
       additionalProperties: false
-      required: [fullName, idNumber, address, birthDate, phoneNumber, email, monthlyIncome, maritalStatus]
+      required: [full_name, id_number, address, birth_date, phone_number, email, monthly_income, marital_status]
       properties:
-        fullName:
+        full_name:
           type: string
           minLength: 1
-        idNumber:
+        id_number:
           type: string
           minLength: 1
         address:
           $ref: "#/components/schemas/Address"
-        birthDate:
+        birth_date:
           type: string
           format: date
           pattern: "^\\d{4}-\\d{2}-\\d{2}$"
-        phoneNumber:
+        phone_number:
           type: string
           minLength: 1
         email:
           type: string
           format: email
-        monthlyIncome:
+        monthly_income:
           $ref: "#/components/schemas/NonNegativeAmount"
-        maritalStatus:
+        marital_status:
           type: string
           minLength: 1
           enum: [MARRIED, UNMARRIED]
     Address:
       type: object
       additionalProperties: false
-      required: [street, city, postalCode]
+      required: [street, city, postal_code]
       properties:
         street:
           type: string
@@ -110,29 +110,29 @@ components:
         city:
           type: string
           minLength: 1
-        postalCode:
+        postal_code:
           type: string
           minLength: 1
     Spouse:
       type: object
       additionalProperties: false
-      required: [fullName, idCardNumber, phoneNumber, monthlyIncome]
+      required: [full_name, id_card_number, phone_number, monthly_income]
       properties:
-        fullName:
+        full_name:
           type: string
           minLength: 1
-        idCardNumber:
+        id_card_number:
           type: string
           minLength: 1
-        phoneNumber:
+        phone_number:
           type: string
           minLength: 1
-        monthlyIncome:
+        monthly_income:
           $ref: "#/components/schemas/NonNegativeAmount"
     CarCollateral:
       type: object
       additionalProperties: false
-      required: [brand, model, manufacturingYear, licensePlate]
+      required: [brand, model, manufacturing_year, license_plate]
       properties:
         brand:
           type: string
@@ -140,25 +140,25 @@ components:
         model:
           type: string
           minLength: 1
-        manufacturingYear:
+        manufacturing_year:
           type: integer
           minimum: 1000
           maximum: 9999
           description: Must not be later than the current calendar year.
-        licensePlate:
+        license_plate:
           type: string
           minLength: 1
     ProposedLoan:
       type: object
       additionalProperties: false
-      required: [amount, tenureMonths]
+      required: [amount, tenure_months]
       properties:
         amount:
           type: number
           exclusiveMinimum: 0
           multipleOf: 100
           description: Amount in the application's configured currency.
-        tenureMonths:
+        tenure_months:
           type: integer
           minimum: 3
           maximum: 48
@@ -169,9 +169,9 @@ components:
     LoanApplicationConfirmation:
       type: object
       additionalProperties: false
-      required: [id, status]
+      required: [application_id, status]
       properties:
-        id:
+        application_id:
           type: string
           format: uuid
         status:

@@ -1,0 +1,22 @@
+# Go
+/bin/
+*.exe
+*.test
+*.out
+*.log
+
+# Build output
+coverage/
+
+# Environment files
+.env
+.env.*
+
+# Editor
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Dependency caches
+vendor/
